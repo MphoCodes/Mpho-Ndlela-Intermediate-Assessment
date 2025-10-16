@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">TodoWeatherApp</string>
+
+    <!-- Weather API Configuration -->
+    <string name="weather_api_key">8c567ed9616f411aace163745251610</string>
+    <string name="weather_base_url">https://api.weatherapi.com/v1/</string>
+
+    <!-- App Strings -->
+    <string name="loading">Loading...</string>
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_location">Unable to get location. Please enable location services.</string>
+    <string name="permission_location_rationale">Location permission is needed to show weather for your area.</string>
 </resources>

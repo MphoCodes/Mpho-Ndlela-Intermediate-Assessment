@@ -4,16 +4,15 @@ import com.google.gson.annotations.SerializedName
 
 /**
  * Data classes for Weather API response from weatherapi.com
- * 
- * Main response containing location, current weather, and astronomy data
+ *
+ * Main response containing location and current weather data
+ * Note: Astronomy data requires a separate API call to astronomy.json endpoint
  */
 data class WeatherResponse(
     @SerializedName("location")
     val location: Location,
     @SerializedName("current")
-    val current: Current,
-    @SerializedName("astronomy")
-    val astronomy: Astronomy
+    val current: Current
 )
 
 /**
@@ -96,6 +95,16 @@ data class Condition(
     val icon: String,
     @SerializedName("code")
     val code: Int
+)
+
+/**
+ * Astronomy API response for sunrise/sunset times
+ */
+data class AstronomyResponse(
+    @SerializedName("location")
+    val location: Location,
+    @SerializedName("astronomy")
+    val astronomy: Astronomy
 )
 
 /**

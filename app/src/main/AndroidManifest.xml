@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Network permission for API calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Location permissions for weather data -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:name=".TodoWeatherApplication"
         android:allowBackup="true"
