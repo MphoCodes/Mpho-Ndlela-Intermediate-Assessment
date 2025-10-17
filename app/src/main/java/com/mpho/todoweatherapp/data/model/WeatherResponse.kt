@@ -2,12 +2,6 @@ package com.mpho.todoweatherapp.data.model
 
 import com.google.gson.annotations.SerializedName
 
-/**
- * Data classes for Weather API response from weatherapi.com
- *
- * Main response containing location and current weather data
- * Note: Astronomy data requires a separate API call to astronomy.json endpoint
- */
 data class WeatherResponse(
     @SerializedName("location")
     val location: Location,
@@ -15,9 +9,6 @@ data class WeatherResponse(
     val current: Current
 )
 
-/**
- * Location information
- */
 data class Location(
     @SerializedName("name")
     val name: String,
@@ -35,9 +26,6 @@ data class Location(
     val localTime: String
 )
 
-/**
- * Current weather conditions
- */
 data class Current(
     @SerializedName("last_updated")
     val lastUpdated: String,
@@ -46,7 +34,7 @@ data class Current(
     @SerializedName("temp_f")
     val temperatureFahrenheit: Double,
     @SerializedName("is_day")
-    val isDay: Int, // 1 for day, 0 for night
+    val isDay: Int,
     @SerializedName("condition")
     val condition: Condition,
     @SerializedName("wind_mph")
@@ -85,9 +73,6 @@ data class Current(
     val gustKph: Double
 )
 
-/**
- * Weather condition details
- */
 data class Condition(
     @SerializedName("text")
     val text: String,
@@ -97,9 +82,6 @@ data class Condition(
     val code: Int
 )
 
-/**
- * Astronomy API response for sunrise/sunset times
- */
 data class AstronomyResponse(
     @SerializedName("location")
     val location: Location,
@@ -107,17 +89,11 @@ data class AstronomyResponse(
     val astronomy: Astronomy
 )
 
-/**
- * Astronomy data for sunrise/sunset times
- */
 data class Astronomy(
     @SerializedName("astro")
     val astro: Astro
 )
 
-/**
- * Astronomical information
- */
 data class Astro(
     @SerializedName("sunrise")
     val sunrise: String,
@@ -136,3 +112,4 @@ data class Astro(
     @SerializedName("is_sun_up")
     val isSunUp: Int
 )
+

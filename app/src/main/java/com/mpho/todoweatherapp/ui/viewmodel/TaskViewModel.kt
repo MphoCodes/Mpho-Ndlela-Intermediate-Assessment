@@ -3,28 +3,17 @@ package com.mpho.todoweatherapp.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mpho.todoweatherapp.data.model.Task
+import com.mpho.todoweatherapp.data.model.TaskPriority
 import com.mpho.todoweatherapp.repository.TaskRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-/**
- * ViewModel for managing Task-related UI state and business logic
- * 
- * Handles all task operations including CRUD operations,
- * filtering, and UI state management
- */
-@HiltViewModel
-class TaskViewModel @Inject constructor(
+class TaskViewModel(
     private val taskRepository: TaskRepository
 ) : ViewModel() {
-    
-    // UI State for task operations
+
     private val _uiState = MutableStateFlow(TaskUiState())
     val uiState: StateFlow<TaskUiState> = _uiState.asStateFlow()
-    
-    // All tasks from repository
     val allTasks: StateFlow<List<Task>> = taskRepository.getAllTasks()
         .stateIn(
             scope = viewModelScope,
@@ -64,21 +53,22 @@ class TaskViewModel @Inject constructor(
         initialValue = TaskCounts()
     )
     
-    /**
-     * Create a new task
-     */
-    fun createTask(title: String, description: String) {
+    fun createTask(
+        title: String,
+        description: String,
+        priority: TaskPriority = TaskPriority.MEDIUM
+    ) {
         if (title.isBlank()) {
             _uiState.value = _uiState.value.copy(
                 error = "Task title cannot be empty"
             )
             return
         }
-        
+
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                taskRepository.createTask(title.trim(), description.trim())
+                taskRepository.createTask(title.trim(), description.trim(), priority)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     message = "Task created successfully"
@@ -91,10 +81,6 @@ class TaskViewModel @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Toggle task completion status
-     */
     fun toggleTaskCompletion(taskId: Long) {
         viewModelScope.launch {
             try {
@@ -106,10 +92,7 @@ class TaskViewModel @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Delete a specific task
-     */
+
     fun deleteTask(task: Task) {
         viewModelScope.launch {
             try {
@@ -124,10 +107,7 @@ class TaskViewModel @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Delete all completed tasks
-     */
+
     fun deleteCompletedTasks() {
         viewModelScope.launch {
             try {
@@ -142,34 +122,22 @@ class TaskViewModel @Inject constructor(
             }
         }
     }
-    
-    /**
-     * Clear error message
-     */
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
-    
-    /**
-     * Clear success message
-     */
+
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(message = null)
     }
 }
 
-/**
- * UI State for Task operations
- */
 data class TaskUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val message: String? = null
 )
 
-/**
- * Data class for task counts/statistics
- */
 data class TaskCounts(
     val total: Int = 0,
     val pending: Int = 0,

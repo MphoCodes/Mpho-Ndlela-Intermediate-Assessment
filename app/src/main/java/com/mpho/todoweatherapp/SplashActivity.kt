@@ -1,29 +1,30 @@
 package com.mpho.todoweatherapp
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.mpho.todoweatherapp.ui.screens.MainScreen
+import com.mpho.todoweatherapp.ui.screens.SplashScreen
 import com.mpho.todoweatherapp.ui.theme.TodoWeatherAppTheme
-class MainActivity : ComponentActivity() {
+
+class SplashActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
         setContent {
             TodoWeatherAppTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    MainScreen()
-                }
+                SplashScreen(
+                    onSplashFinished = {
+                        startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+                        finish()
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
         }
     }
 }
-

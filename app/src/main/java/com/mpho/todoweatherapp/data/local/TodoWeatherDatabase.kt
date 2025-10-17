@@ -8,12 +8,7 @@ import android.content.Context
 import com.mpho.todoweatherapp.data.model.Task
 import com.mpho.todoweatherapp.data.model.Converters
 
-/**
- * Room database for the TodoWeather app
- * 
- * Contains the database holder and serves as the main access point
- * for the underlying connection to your app's persisted, relational data.
- */
+
 @Database(
     entities = [Task::class],
     version = 1,
