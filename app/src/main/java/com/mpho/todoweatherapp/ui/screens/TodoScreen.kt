@@ -54,20 +54,11 @@ private fun TaskItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            IconButton(
-                onClick = onToggleComplete,
+            Checkbox(
+                checked = task.isCompleted,
+                onCheckedChange = { onToggleComplete() },
                 modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    imageVector = if (task.isCompleted) Icons.Default.Check else Icons.Default.Add,
-                    contentDescription = if (task.isCompleted) "Mark as pending" else "Mark as complete",
-                    tint = if (task.isCompleted) {
-                        MaterialTheme.colorScheme.secondary
-                    } else {
-                        MaterialTheme.colorScheme.outline
-                    }
-                )
-            }
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 
