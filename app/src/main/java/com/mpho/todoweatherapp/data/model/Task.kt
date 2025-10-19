@@ -17,5 +17,6 @@ data class Task(
     val priority: TaskPriority = TaskPriority.MEDIUM,
     val isCompleted: Boolean = false,
     val createdAt: Date = Date(),
-    val completedAt: Date? = null
+    val completedAt: Date? = null,
+    val deadline: Date? = null
 )

@@ -53,28 +53,31 @@ class WeatherViewModel(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                _currentLocation.value = location
-                
+
 
                 val weatherResult = weatherRepository.getCurrentWeather(location)
                 if (weatherResult.isSuccess) {
-                    _weatherData.value = weatherResult.getOrNull()
+                    val weather = weatherResult.getOrNull()
+                    _weatherData.value = weather
+                    weather?.let {
+                        _currentLocation.value = "${it.location.name}, ${it.location.country}"
+                    }
                 } else {
                     _uiState.value = _uiState.value.copy(
                         error = weatherResult.exceptionOrNull()?.message ?: "Failed to load weather data"
                     )
                 }
-                
+
 
                 val astronomyResult = weatherRepository.getAstronomyData(location)
                 if (astronomyResult.isSuccess) {
                     _astronomyData.value = astronomyResult.getOrNull()
                 }
-                
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false
                 )
-                
+
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

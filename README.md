@@ -40,7 +40,7 @@ Built with **Jetpack Compose**, **MVVM architecture**, and **Room + Retrofit**, 
 - **CI/CD:** GitHub Actions (build + test + APK artifact)  
 
 ## Future Improvements  
-- Task categories and reminders  
+
 - 7-day weather forecast 
 
 **Developed by Mpho Ndlela for Glucode Intermediate Android Engineer Assessment**

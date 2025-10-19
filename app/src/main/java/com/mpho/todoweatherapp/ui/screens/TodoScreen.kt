@@ -8,7 +8,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +37,7 @@ private fun TaskItem(
     task: Task,
     onToggleComplete: () -> Unit,
     onDelete: () -> Unit,
+    onEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -116,24 +120,51 @@ private fun TaskItem(
                     )
                 }
 
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Created: ${formatDate(task.createdAt)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
 
-                Text(
-                    text = formatDate(task.createdAt),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
+                    task.deadline?.let { deadlineDate ->
+                        Text(text = "•", style = MaterialTheme.typography.bodySmall)
+                        val isOverdue = !task.isCompleted && deadlineDate.before(Date())
+                        Text(
+                            text = "Due: ${formatDate(deadlineDate)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isOverdue) Color(0xFFFF6B6B) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
             }
 
+            Row {
+                IconButton(
+                    onClick = onEdit,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit task",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
 
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete task",
-                    tint = MaterialTheme.colorScheme.error
-                )
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete task",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
@@ -142,12 +173,14 @@ private fun TaskItem(
 @Composable
 private fun AddTaskDialog(
     onDismiss: () -> Unit,
-    onAddTask: (String, String, TaskPriority) -> Unit,
+    onAddTask: (String, String, TaskPriority, Date?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var selectedPriority by remember { mutableStateOf(TaskPriority.MEDIUM) }
+    var deadline by remember { mutableStateOf<Date?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -184,17 +217,37 @@ private fun AddTaskDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TaskPriority.values().forEach { priority ->
                         FilterChip(
                             selected = selectedPriority == priority,
                             onClick = { selectedPriority = priority },
                             label = { Text(priority.name) },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.fillMaxWidth()
                         )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = deadline?.let { "Deadline: ${formatDate(it)}" } ?: "Set Deadline (Optional)"
+                    )
+                }
+
+                if (deadline != null) {
+                    TextButton(
+                        onClick = { deadline = null },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Clear Deadline")
                     }
                 }
             }
@@ -203,7 +256,7 @@ private fun AddTaskDialog(
             TextButton(
                 onClick = {
                     if (title.isNotBlank()) {
-                        onAddTask(title, description, selectedPriority)
+                        onAddTask(title, description, selectedPriority, deadline)
                     }
                 },
                 enabled = title.isNotBlank()
@@ -217,6 +270,129 @@ private fun AddTaskDialog(
             }
         }
     )
+
+    if (showDatePicker) {
+        SimpleDatePickerDialog(
+            onDismiss = { showDatePicker = false },
+            onDateSelected = { selectedDate ->
+                deadline = selectedDate
+                showDatePicker = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun EditTaskDialog(
+    task: Task,
+    onDismiss: () -> Unit,
+    onUpdateTask: (String, String, TaskPriority, Date?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var title by remember { mutableStateOf(task.title) }
+    var description by remember { mutableStateOf(task.description) }
+    var selectedPriority by remember { mutableStateOf(task.priority) }
+    var deadline by remember { mutableStateOf(task.deadline) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Edit Task")
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Task Title *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description (optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Priority",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TaskPriority.values().forEach { priority ->
+                        FilterChip(
+                            selected = selectedPriority == priority,
+                            onClick = { selectedPriority = priority },
+                            label = { Text(priority.name) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = deadline?.let { "Deadline: ${formatDate(it)}" } ?: "Set Deadline (Optional)"
+                    )
+                }
+
+                if (deadline != null) {
+                    TextButton(
+                        onClick = { deadline = null },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Clear Deadline")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (title.isNotBlank()) {
+                        onUpdateTask(title, description, selectedPriority, deadline)
+                    }
+                },
+                enabled = title.isNotBlank()
+            ) {
+                Text("Update")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+
+    if (showDatePicker) {
+        SimpleDatePickerDialog(
+            onDismiss = { showDatePicker = false },
+            onDateSelected = { selectedDate ->
+                deadline = selectedDate
+                showDatePicker = false
+            }
+        )
+    }
 }
 
 private fun formatDate(date: Date): String {
@@ -245,8 +421,9 @@ fun TodoScreen(
     val pendingTasks by viewModel.pendingTasks.collectAsStateWithLifecycle()
     val completedTasks by viewModel.completedTasks.collectAsStateWithLifecycle()
     val taskCounts by viewModel.taskCounts.collectAsStateWithLifecycle()
-    
+
     var showAddTaskDialog by remember { mutableStateOf(false) }
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
     
     Column(
         modifier = modifier
@@ -301,7 +478,8 @@ fun TodoScreen(
                     TaskItem(
                         task = task,
                         onToggleComplete = { viewModel.toggleTaskCompletion(task.id) },
-                        onDelete = { viewModel.deleteTask(task) }
+                        onDelete = { viewModel.deleteTask(task) },
+                        onEdit = { taskToEdit = task }
                     )
                 }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -330,7 +508,8 @@ fun TodoScreen(
                     TaskItem(
                         task = task,
                         onToggleComplete = { viewModel.toggleTaskCompletion(task.id) },
-                        onDelete = { viewModel.deleteTask(task) }
+                        onDelete = { viewModel.deleteTask(task) },
+                        onEdit = { taskToEdit = task }
                     )
                 }
             }
@@ -352,8 +531,8 @@ fun TodoScreen(
     if (showAddTaskDialog) {
         AddTaskDialog(
             onDismiss = { showAddTaskDialog = false },
-            onAddTask = { title, description, priority ->
-                viewModel.createTask(title, description, priority)
+            onAddTask = { title, description, priority, deadline ->
+                viewModel.createTask(title, description, priority, deadline)
                 showAddTaskDialog = false
             }
         )
@@ -372,6 +551,17 @@ fun TodoScreen(
 
             viewModel.clearMessage()
         }
+    }
+
+    taskToEdit?.let { task ->
+        EditTaskDialog(
+            task = task,
+            onDismiss = { taskToEdit = null },
+            onUpdateTask = { title, description, priority, deadline ->
+                viewModel.updateTask(task.id, title, description, priority, deadline)
+                taskToEdit = null
+            }
+        )
     }
 }
 
@@ -584,4 +774,135 @@ private fun SuggestionItem(
             }
         }
     }
+}
+
+@Composable
+private fun SimpleDatePickerDialog(
+    onDismiss: () -> Unit,
+    onDateSelected: (Date) -> Unit
+) {
+    val calendar = Calendar.getInstance()
+    var selectedYear by remember { mutableStateOf(calendar.get(Calendar.YEAR)) }
+    var selectedMonth by remember { mutableStateOf(calendar.get(Calendar.MONTH)) }
+    var selectedDay by remember { mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH)) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Deadline") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Day", style = MaterialTheme.typography.labelSmall)
+                        IconButton(onClick = {
+                            selectedDay = if (selectedDay < 31) selectedDay + 1 else 1
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowUp, "Increase day")
+                        }
+                        Text(
+                            text = selectedDay.toString().padStart(2, '0'),
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        IconButton(onClick = {
+                            selectedDay = if (selectedDay > 1) selectedDay - 1 else 31
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowDown, "Decrease day")
+                        }
+                    }
+
+                    Text("/", style = MaterialTheme.typography.headlineMedium)
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Month", style = MaterialTheme.typography.labelSmall)
+                        IconButton(onClick = {
+                            selectedMonth = if (selectedMonth < 11) selectedMonth + 1 else 0
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowUp, "Increase month")
+                        }
+                        Text(
+                            text = (selectedMonth + 1).toString().padStart(2, '0'),
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        IconButton(onClick = {
+                            selectedMonth = if (selectedMonth > 0) selectedMonth - 1 else 11
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowDown, "Decrease month")
+                        }
+                    }
+
+                    Text("/", style = MaterialTheme.typography.headlineMedium)
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Year", style = MaterialTheme.typography.labelSmall)
+                        IconButton(onClick = { selectedYear++ }) {
+                            Icon(Icons.Default.KeyboardArrowUp, "Increase year")
+                        }
+                        Text(
+                            text = selectedYear.toString(),
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        IconButton(onClick = {
+                            if (selectedYear > calendar.get(Calendar.YEAR)) selectedYear--
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowDown, "Decrease year")
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            calendar.time = Date()
+                            calendar.add(Calendar.DAY_OF_MONTH, 1)
+                            selectedYear = calendar.get(Calendar.YEAR)
+                            selectedMonth = calendar.get(Calendar.MONTH)
+                            selectedDay = calendar.get(Calendar.DAY_OF_MONTH)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Tomorrow", style = MaterialTheme.typography.bodySmall)
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            calendar.time = Date()
+                            calendar.add(Calendar.DAY_OF_MONTH, 7)
+                            selectedYear = calendar.get(Calendar.YEAR)
+                            selectedMonth = calendar.get(Calendar.MONTH)
+                            selectedDay = calendar.get(Calendar.DAY_OF_MONTH)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("1 Week", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    calendar.set(selectedYear, selectedMonth, selectedDay, 23, 59, 59)
+                    onDateSelected(calendar.time)
+                }
+            ) {
+                Text("Set")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

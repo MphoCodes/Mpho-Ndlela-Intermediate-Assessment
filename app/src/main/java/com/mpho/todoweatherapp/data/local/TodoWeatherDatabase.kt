@@ -12,7 +12,7 @@ import com.mpho.todoweatherapp.data.model.Converters
 
 @Database(
     entities = [Task::class, SavedCity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -26,8 +26,21 @@ interface TaskDao {
     
     /**
      * Get all pending (not completed) tasks
+     * Sorted by priority (HIGH, MEDIUM, LOW) then by deadline
      */
-    @Query("SELECT * FROM tasks WHERE isCompleted = 0 ORDER BY createdAt DESC")
+    @Query("""
+        SELECT * FROM tasks
+        WHERE isCompleted = 0
+        ORDER BY
+            CASE priority
+                WHEN 'HIGH' THEN 1
+                WHEN 'MEDIUM' THEN 2
+                WHEN 'LOW' THEN 3
+            END,
+            CASE WHEN deadline IS NULL THEN 1 ELSE 0 END,
+            deadline ASC,
+            createdAt DESC
+    """)
     fun getPendingTasks(): Flow<List<Task>>
     
     /**

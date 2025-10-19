@@ -166,6 +166,14 @@ fun WeatherScreen(
             ) {
 
                 weatherData?.let { weather ->
+                    WeatherSuggestionCard(
+                        condition = weather.current.condition.text,
+                        temperature = weather.current.temperatureCelsius,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                weatherData?.let { weather ->
                     CurrentWeatherCard(
                         temperature = "${weather.current.temperatureCelsius.toInt()}°C",
                         condition = weather.current.condition.text,
@@ -175,7 +183,7 @@ fun WeatherScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                
+
 
                 astronomyData?.let { astronomy ->
                     AstronomyCard(
@@ -184,7 +192,7 @@ fun WeatherScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                
+
 
                 weatherData?.let { weather ->
                     WeatherDetailsCard(
@@ -681,5 +689,114 @@ private fun SavedCityItem(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun WeatherSuggestionCard(
+    condition: String,
+    temperature: Double,
+    modifier: Modifier = Modifier
+) {
+    val suggestion = getWeatherSuggestion(condition, temperature)
+    val icon = getWeatherIcon(condition)
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.size(40.dp)
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Weather Tip",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = suggestion,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+    }
+}
+
+private fun getWeatherSuggestion(condition: String, temperature: Double): String {
+    val conditionLower = condition.lowercase()
+
+    return when {
+        conditionLower.contains("rain") || conditionLower.contains("drizzle") || conditionLower.contains("shower") ->
+            "It's raining today. Don't forget to grab an umbrella before heading out!"
+
+        conditionLower.contains("snow") || conditionLower.contains("blizzard") || conditionLower.contains("sleet") ->
+            "Snow expected today. Dress warmly and drive carefully!"
+
+        conditionLower.contains("thunder") || conditionLower.contains("storm") ->
+            "Thunderstorms ahead. Stay indoors if possible and avoid outdoor activities."
+
+        conditionLower.contains("fog") || conditionLower.contains("mist") ->
+            "Foggy conditions. Drive slowly and use your fog lights."
+
+        conditionLower.contains("cloud") || conditionLower.contains("overcast") ->
+            "Cloudy day ahead. A light jacket might be useful."
+
+        (conditionLower.contains("sunny") || conditionLower.contains("clear")) && temperature > 30 ->
+            "Hot and sunny! Stay hydrated and wear sunscreen."
+
+        (conditionLower.contains("sunny") || conditionLower.contains("clear")) && temperature > 20 ->
+            "Beautiful sunny day! Perfect weather to get things done."
+
+        temperature < 10 ->
+            "It's quite cold today. Bundle up and stay warm!"
+
+        temperature > 35 ->
+            "Extremely hot today. Avoid prolonged sun exposure and drink plenty of water."
+
+        else ->
+            "Have a great day! Check your tasks and stay productive."
+    }
+}
+
+private fun getWeatherIcon(condition: String): androidx.compose.ui.graphics.vector.ImageVector {
+    val conditionLower = condition.lowercase()
+
+    return when {
+        conditionLower.contains("rain") || conditionLower.contains("drizzle") || conditionLower.contains("shower") ->
+            Icons.Default.Info
+
+        conditionLower.contains("snow") || conditionLower.contains("blizzard") ->
+            Icons.Default.Info
+
+        conditionLower.contains("thunder") || conditionLower.contains("storm") ->
+            Icons.Default.Warning
+
+        conditionLower.contains("fog") || conditionLower.contains("mist") ->
+            Icons.Default.Info
+
+        conditionLower.contains("cloud") || conditionLower.contains("overcast") ->
+            Icons.Default.Info
+
+        conditionLower.contains("sunny") || conditionLower.contains("clear") ->
+            Icons.Default.Info
+
+        else ->
+            Icons.Default.Info
     }
 }

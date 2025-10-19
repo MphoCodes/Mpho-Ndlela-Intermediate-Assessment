@@ -46,7 +46,8 @@ class TaskRepository(
     suspend fun createTask(
         title: String,
         description: String,
-        priority: TaskPriority = TaskPriority.MEDIUM
+        priority: TaskPriority = TaskPriority.MEDIUM,
+        deadline: Date? = null
     ): Long {
         val task = Task(
             title = title,
@@ -54,9 +55,29 @@ class TaskRepository(
             priority = priority,
             isCompleted = false,
             createdAt = Date(),
-            completedAt = null
+            completedAt = null,
+            deadline = deadline
         )
         return insertTask(task)
+    }
+
+    suspend fun updateTask(
+        taskId: Long,
+        title: String,
+        description: String,
+        priority: TaskPriority,
+        deadline: Date?
+    ) {
+        val task = getTaskById(taskId)
+        task?.let {
+            val updatedTask = it.copy(
+                title = title,
+                description = description,
+                priority = priority,
+                deadline = deadline
+            )
+            taskDao.updateTask(updatedTask)
+        }
     }
 
     suspend fun toggleTaskCompletion(taskId: Long) {

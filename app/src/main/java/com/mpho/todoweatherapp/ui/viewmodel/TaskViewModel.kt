@@ -56,7 +56,8 @@ class TaskViewModel(
     fun createTask(
         title: String,
         description: String,
-        priority: TaskPriority = TaskPriority.MEDIUM
+        priority: TaskPriority = TaskPriority.MEDIUM,
+        deadline: java.util.Date? = null
     ) {
         if (title.isBlank()) {
             _uiState.value = _uiState.value.copy(
@@ -68,7 +69,7 @@ class TaskViewModel(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                taskRepository.createTask(title.trim(), description.trim(), priority)
+                taskRepository.createTask(title.trim(), description.trim(), priority, deadline)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     message = "Task created successfully"
@@ -81,6 +82,30 @@ class TaskViewModel(
             }
         }
     }
+    fun updateTask(
+        taskId: Long,
+        title: String,
+        description: String,
+        priority: TaskPriority,
+        deadline: java.util.Date?
+    ) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+                taskRepository.updateTask(taskId, title.trim(), description.trim(), priority, deadline)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    message = "Task updated successfully"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Failed to update task: ${e.message}"
+                )
+            }
+        }
+    }
+
     fun toggleTaskCompletion(taskId: Long) {
         viewModelScope.launch {
             try {
