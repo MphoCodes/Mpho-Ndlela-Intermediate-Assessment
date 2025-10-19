@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mpho.todoweatherapp.data.model.WeatherResponse
 import com.mpho.todoweatherapp.data.model.AstronomyResponse
+import com.mpho.todoweatherapp.data.model.SavedCity
 import com.mpho.todoweatherapp.repository.WeatherRepository
+import com.mpho.todoweatherapp.repository.SavedCityRepository
 import com.mpho.todoweatherapp.utils.LocationService
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -19,7 +21,8 @@ data class WeatherUiState(
 
 class WeatherViewModel(
     private val weatherRepository: WeatherRepository,
-    private val locationService: LocationService
+    private val locationService: LocationService,
+    private val savedCityRepository: SavedCityRepository
 ) : ViewModel() {
     
 
@@ -37,9 +40,11 @@ class WeatherViewModel(
 
     private val _currentLocation = MutableStateFlow("Johannesburg")
     val currentLocation: StateFlow<String> = _currentLocation.asStateFlow()
-    
-    init {
 
+    val savedCities: StateFlow<List<SavedCity>> = savedCityRepository.allSavedCities
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    init {
         loadWeatherData()
     }
     
@@ -217,5 +222,26 @@ class WeatherViewModel(
                 )
             }
         }
+    }
+
+    fun saveCurrentCity() {
+        viewModelScope.launch {
+            _weatherData.value?.let { weather ->
+                savedCityRepository.saveCity(
+                    cityName = weather.location.name,
+                    country = weather.location.country
+                )
+            }
+        }
+    }
+
+    fun deleteCity(city: SavedCity) {
+        viewModelScope.launch {
+            savedCityRepository.deleteCity(city)
+        }
+    }
+
+    fun loadCityWeather(cityName: String) {
+        loadWeatherData(cityName)
     }
 }

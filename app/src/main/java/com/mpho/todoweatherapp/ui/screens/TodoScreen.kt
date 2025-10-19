@@ -237,7 +237,8 @@ fun TodoScreen(
     val weatherViewModel: WeatherViewModel = viewModel {
         WeatherViewModel(
             AppModule.provideWeatherRepository(context),
-            AppModule.provideLocationService(context)
+            AppModule.provideLocationService(context),
+            AppModule.provideSavedCityRepository(context)
         )
     }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

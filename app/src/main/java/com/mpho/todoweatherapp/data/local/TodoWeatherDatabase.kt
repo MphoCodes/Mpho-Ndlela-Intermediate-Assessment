@@ -6,21 +6,20 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import android.content.Context
 import com.mpho.todoweatherapp.data.model.Task
+import com.mpho.todoweatherapp.data.model.SavedCity
 import com.mpho.todoweatherapp.data.model.Converters
 
 
 @Database(
-    entities = [Task::class],
-    version = 2,
+    entities = [Task::class, SavedCity::class],
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class TodoWeatherDatabase : RoomDatabase() {
-    
-    /**
-     * Get the TaskDao for database operations
-     */
+
     abstract fun taskDao(): TaskDao
+    abstract fun savedCityDao(): SavedCityDao
     
     companion object {
         // Singleton prevents multiple instances of database opening at the same time

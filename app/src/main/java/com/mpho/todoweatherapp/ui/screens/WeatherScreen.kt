@@ -11,11 +11,10 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,7 +43,8 @@ fun WeatherScreen(
     val viewModel: WeatherViewModel = viewModel {
         WeatherViewModel(
             AppModule.provideWeatherRepository(context),
-            AppModule.provideLocationService(context)
+            AppModule.provideLocationService(context),
+            AppModule.provideSavedCityRepository(context)
         )
     }
 
@@ -67,14 +67,26 @@ fun WeatherScreen(
     val weatherData by viewModel.weatherData.collectAsStateWithLifecycle()
     val astronomyData by viewModel.astronomyData.collectAsStateWithLifecycle()
     val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
-    
+    val savedCities by viewModel.savedCities.collectAsStateWithLifecycle()
+
     var showSearchDialog by remember { mutableStateOf(false) }
-    
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    var showSavedCitiesDialog by remember { mutableStateOf(false) }
+
+    Scaffold(
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showSavedCitiesDialog = true },
+                icon = { Icon(Icons.Default.Star, contentDescription = "Saved Cities") },
+                text = { Text("Saved Cities") }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -184,8 +196,8 @@ fun WeatherScreen(
                 }
             }
         }
+        }
     }
-    
 
     if (showSearchDialog) {
         SearchLocationDialog(
@@ -193,6 +205,23 @@ fun WeatherScreen(
             onSearch = { location ->
                 viewModel.searchLocation(location)
                 showSearchDialog = false
+            }
+        )
+    }
+
+    if (showSavedCitiesDialog) {
+        SavedCitiesDialog(
+            savedCities = savedCities,
+            onDismiss = { showSavedCitiesDialog = false },
+            onCityClick = { city ->
+                viewModel.loadCityWeather(city.cityName)
+                showSavedCitiesDialog = false
+            },
+            onDeleteCity = { city ->
+                viewModel.deleteCity(city)
+            },
+            onSaveCurrentCity = {
+                viewModel.saveCurrentCity()
             }
         )
     }
@@ -551,5 +580,106 @@ private fun AnimatedRefreshButton(
                 MaterialTheme.colorScheme.onSurface
             }
         )
+    }
+}
+
+@Composable
+private fun SavedCitiesDialog(
+    savedCities: List<com.mpho.todoweatherapp.data.model.SavedCity>,
+    onDismiss: () -> Unit,
+    onCityClick: (com.mpho.todoweatherapp.data.model.SavedCity) -> Unit,
+    onDeleteCity: (com.mpho.todoweatherapp.data.model.SavedCity) -> Unit,
+    onSaveCurrentCity: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Saved Cities") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = {
+                        onSaveCurrentCity()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Save Current City")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (savedCities.isEmpty()) {
+                    Text(
+                        text = "No saved cities yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 300.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(savedCities) { city ->
+                            SavedCityItem(
+                                city = city,
+                                onClick = { onCityClick(city) },
+                                onDelete = { onDeleteCity(city) }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun SavedCityItem(
+    city: com.mpho.todoweatherapp.data.model.SavedCity,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = city.cityName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = city.country,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete city",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
     }
 }

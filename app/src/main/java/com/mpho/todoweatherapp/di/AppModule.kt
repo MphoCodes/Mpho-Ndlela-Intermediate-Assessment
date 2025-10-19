@@ -9,6 +9,7 @@ import com.mpho.todoweatherapp.data.local.TodoWeatherDatabase
 import com.mpho.todoweatherapp.data.remote.WeatherApiService
 import com.mpho.todoweatherapp.repository.TaskRepository
 import com.mpho.todoweatherapp.repository.WeatherRepository
+import com.mpho.todoweatherapp.repository.SavedCityRepository
 import com.mpho.todoweatherapp.utils.LocationService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -29,7 +30,10 @@ object AppModule {
     
     @Volatile
     private var weatherRepository: WeatherRepository? = null
-    
+
+    @Volatile
+    private var savedCityRepository: SavedCityRepository? = null
+
     fun provideDatabase(context: Context): TodoWeatherDatabase {
         return database ?: synchronized(this) {
             database ?: Room.databaseBuilder(
@@ -89,5 +93,13 @@ object AppModule {
 
     fun provideLocationService(context: Context): LocationService {
         return LocationService(context)
+    }
+
+    fun provideSavedCityRepository(context: Context): SavedCityRepository {
+        return savedCityRepository ?: synchronized(this) {
+            savedCityRepository ?: SavedCityRepository(
+                provideDatabase(context).savedCityDao()
+            ).also { savedCityRepository = it }
+        }
     }
 }
