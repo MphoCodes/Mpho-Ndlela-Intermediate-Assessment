@@ -7,6 +7,9 @@
 **TodoWeather** is an Android application that combines a task manager with real-time weather data.  
 Built with **Jetpack Compose**, **MVVM architecture**, and **Room + Retrofit**, it demonstrates clean architecture, asynchronous data handling, and a modern Material 3 UI.
 
+🎥 **Watch the demo video here:**  
+[▶️ View Demo on GitHub](https://github.com/MphoCodes/Mpho-Ndlela-Intermediate-Assessment/blob/main/glucode-demo.mp4)
+
 ---
 
 ## Features  
@@ -39,8 +42,12 @@ Built with **Jetpack Compose**, **MVVM architecture**, and **Room + Retrofit**, 
 - **Location:** FusedLocationProviderClient  
 - **CI/CD:** GitHub Actions (build + test + APK artifact)  
 
+---
+
 ## Future Improvements  
+- 7-day weather forecast  
 
-- 7-day weather forecast 
+---
 
-**Developed by Mpho Ndlela for Glucode Intermediate Android Engineer Assessment**
+**Developed by Mpho Ndlela**  
+_For Glucode Intermediate Android Engineer Assessment_
