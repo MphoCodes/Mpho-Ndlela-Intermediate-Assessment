@@ -38,7 +38,7 @@ jobs:
       
       - name: Upload build artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
@@ -48,9 +48,8 @@ jobs:
       
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: app/build/reports/
           retention-days: 7
-
